@@ -1293,11 +1293,16 @@
             width: 100%;
         }
         .sensor-icon {
-            color: var(--text-muted);
             font-size: 13px;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        #sensor-card-ec .sensor-icon {
+            color: #3b82f6;
+        }
+        #sensor-card-rtd .sensor-icon {
+            color: #10b981;
         }
         .sensor-info {
             display: flex;
@@ -1317,8 +1322,13 @@
         .sensor-value {
             font-size: 20px;
             font-weight: 700;
-            color: var(--text-title);
             font-family: 'JetBrains Mono', monospace;
+        }
+        #sensor-card-ec .sensor-value {
+            color: #3b82f6;
+        }
+        #sensor-card-rtd .sensor-value {
+            color: #10b981;
         }
         .sensor-unit {
             font-size: 11px;
