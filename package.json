@@ -1,0 +1,20 @@
+{
+  "name": "gdc",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@serialport/parser-delimiter": "^13.0.0",
+    "cobs": "^0.2.1",
+    "electron": "^40.2.1",
+    "jquery": "^4.0.0",
+    "serialport": "^13.0.0"
+  }
+}

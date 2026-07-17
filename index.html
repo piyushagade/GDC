@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GatorByte GDC</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+        :root {
+            --bg-main: #070a13;
+            --bg-gradient: radial-gradient(circle at top right, #0d1527, #070a13);
+            --bg-header: rgba(15, 23, 42, 0.6);
+            --bg-display: rgba(15, 23, 42, 0.2);
+            --bg-controls: rgba(15, 23, 42, 0.75);
+            --bg-input: rgba(30, 41, 59, 0.7);
+            --bg-tag: rgba(255, 255, 255, 0.04);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-line: rgba(255, 255, 255, 0.03);
+            --text-main: #cbd5e1;
+            --text-title: #f8fafc;
+            --text-muted: #94a3b8;
+            --bg-log-line: rgba(15, 23, 42, 0.4);
+            --bg-log-line-hover: rgba(15, 23, 42, 0.6);
+            --shadow-header: none;
+            --shadow-controls: none;
+            --shadow-btn-hover: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-line-hover: none;
+            --bg-btn-hover: rgba(255, 255, 255, 0.1);
+            --text-btn-hover: #f8fafc;
+            --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+            --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+            --bg-titlebar: rgba(7, 10, 19, 0.95);
+            --text-titlebar: #94a3b8;
+            --btn-titlebar-hover: rgba(255, 255, 255, 0.08);
+        }
+
+        body.light-theme {
+            --bg-main: #f1f5f9;
+            --bg-gradient: radial-gradient(circle at top right, #e2e8f0, #f1f5f9);
+            --bg-header: rgba(255, 255, 255, 0.85);
+            --bg-display: rgba(248, 250, 252, 0.4);
+            --bg-controls: rgba(255, 255, 255, 0.9);
+            --bg-input: rgba(255, 255, 255, 0.95);
+            --bg-tag: rgba(15, 23, 42, 0.04);
+            --border-color: rgba(15, 23, 42, 0.08);
+            --border-line: rgba(15, 23, 42, 0.04);
+            --text-main: #334155;
+            --text-title: #0f172a;
+            --text-muted: #64748b;
+            --bg-log-line: rgba(255, 255, 255, 0.65);
+            --bg-log-line-hover: rgba(255, 255, 255, 1);
+            --shadow-header: 0 1px 3px rgba(15, 23, 42, 0.04);
+            --shadow-controls: 0 -2px 10px rgba(15, 23, 42, 0.04);
+            --shadow-btn-hover: 0 4px 12px rgba(15, 23, 42, 0.08);
+            --shadow-line-hover: 0 2px 8px rgba(15, 23, 42, 0.03);
+            --bg-btn-hover: rgba(15, 23, 42, 0.05);
+            --text-btn-hover: #0f172a;
+            --scrollbar-thumb: rgba(15, 23, 42, 0.12);
+            --scrollbar-thumb-hover: rgba(15, 23, 42, 0.2);
+            --bg-titlebar: rgba(226, 232, 240, 0.95);
+            --text-titlebar: #64748b;
+            --btn-titlebar-hover: rgba(15, 23, 42, 0.08);
+        }
+
+        body.dark-theme {
+            --bg-main: #080808;
+            --bg-gradient: radial-gradient(circle at top right, #1a1a1a, #080808);
+            --bg-header: rgba(18, 18, 18, 0.85);
+            --bg-display: rgba(10, 10, 10, 0.3);
+            --bg-controls: rgba(20, 20, 20, 0.9);
+            --bg-input: rgba(28, 28, 28, 0.9);
+            --bg-tag: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.06);
+            --border-line: rgba(255, 255, 255, 0.02);
+            --text-main: #a3a3a3;
+            --text-title: #f5f5f5;
+            --text-muted: #737373;
+            --bg-log-line: rgba(15, 15, 15, 0.6);
+            --bg-log-line-hover: rgba(25, 25, 25, 0.9);
+            --shadow-header: none;
+            --shadow-controls: none;
+            --shadow-btn-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-line-hover: none;
+            --bg-btn-hover: rgba(255, 255, 255, 0.05);
+            --text-btn-hover: #f5f5f5;
+            --scrollbar-thumb: rgba(255, 255, 255, 0.06);
+            --scrollbar-thumb-hover: rgba(255, 255, 255, 0.12);
+            --bg-titlebar: rgba(14, 14, 14, 0.95);
+            --text-titlebar: #737373;
+            --btn-titlebar-hover: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        #titlebar {
+            height: 32px;
+            background: var(--bg-titlebar);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+            padding: 0 10px;
+            position: relative;
+            z-index: 2100;
+            transition: background-color 0.3s ease;
+        }
+
+        .titlebar-drag-region {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 138px; /* Leave space for 3 window controls (3 * 46px = 138px) */
+            bottom: 0;
+            -webkit-app-region: drag;
+            z-index: 1;
+        }
+
+        .titlebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-titlebar);
+            position: relative;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .titlebar-logo i {
+            font-size: 10px;
+            color: #3b82f6;
+        }
+
+        .titlebar-window-controls {
+            display: flex;
+            position: relative;
+            z-index: 2;
+            -webkit-app-region: no-drag;
+            height: 100%;
+            margin-right: -10px; /* Align with right edge */
+        }
+
+        .titlebar-btn {
+            height: 32px !important;
+            width: 46px !important;
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            color: var(--text-titlebar) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            box-shadow: none !important;
+            transform: none !important;
+            transition: background 0.15s ease, color 0.15s ease !important;
+        }
+
+        .titlebar-btn:hover {
+            background: var(--btn-titlebar-hover) !important;
+            color: var(--text-title) !important;
+        }
+
+        .titlebar-btn.close:hover {
+            background: #ef4444 !important;
+            color: #ffffff !important;
+        }
+
+        #logger-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: var(--bg-gradient);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        #logger-header {
+            padding: 14px 20px;
+            background: var(--bg-header);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow-header);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: -0.2px;
+            color: var(--text-title);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+            transition: all 0.3s ease;
+        }
+
+        body.connected .status-dot {
+            background-color: #10b981;
+            box-shadow: 0 0 12px #10b981;
+            animation: pulse-green 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        body.disconnected .status-dot {
+            background-color: #ef4444;
+            box-shadow: 0 0 12px #ef4444;
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .info-tag {
+            font-size: 11px;
+            background: var(--bg-tag);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 20px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .header-action-btn {
+            height: 26px;
+            width: 26px;
+            padding: 0;
+            background: var(--bg-tag);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .header-action-btn:hover {
+            background: var(--bg-btn-hover);
+            color: var(--text-btn-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-btn-hover);
+        }
+
+        #logger-display {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: var(--bg-display);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Beautiful custom scrollbar */
+        #logger-display::-webkit-scrollbar {
+            width: 8px;
+        }
+        #logger-display::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #logger-display::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+        #logger-display::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+
+        /* Port Picker Popup styling */
+        .port-picker-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .header-action-btn.wide {
+            width: auto !important;
+            padding: 0 12px !important;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .port-popup-card {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 200px;
+            background: var(--bg-controls);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .port-popup-card.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .popup-header {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-title);
+        }
+
+        /* Specific refresh button inside popup */
+        .popup-header button {
+            height: 24px;
+            width: 24px;
+            background: var(--bg-tag);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            border-radius: 4px;
+        }
+        .popup-header button:hover {
+            background: var(--bg-btn-hover);
+            color: var(--text-btn-hover);
+            transform: translateY(-0.5px);
+        }
+        .popup-header button i {
+            font-size: 11px;
+        }
+
+        .popup-body {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .port-item {
+            padding: 8px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            border-radius: 6px;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .port-item:hover {
+            background: var(--bg-btn-hover);
+            color: var(--text-title);
+        }
+
+        .port-item.active {
+            background: rgba(59, 130, 246, 0.15) !important;
+            color: #3b82f6 !important;
+            font-weight: 600;
+        }
+
+        .port-item.empty {
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 11px;
+            cursor: default;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        #logger-controls {
+            padding: 16px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            background: var(--bg-controls);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border-color);
+            box-shadow: var(--shadow-controls);
+            transition: all 0.3s ease;
+        }
+
+        .menu-tabs {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+
+        .menu-tab {
+            height: 30px !important;
+            width: auto !important;
+            padding: 0 16px !important;
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            color: var(--text-muted) !important;
+            border-radius: 20px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            cursor: pointer !important;
+            box-shadow: none !important;
+            transform: none !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .menu-tab:hover {
+            color: var(--text-title) !important;
+            background: var(--bg-tag) !important;
+        }
+
+        .menu-tab.active {
+            color: #3b82f6 !important;
+            background: rgba(59, 130, 246, 0.15) !important;
+            border-color: rgba(59, 130, 246, 0.2) !important;
+        }
+
+        .tab-panel {
+            display: none;
+            width: 100%;
+        }
+
+        .tab-panel.active {
+            display: flex;
+            align-items: center;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 10px;
+            width: 100%;
+        }
+
+        .menu-action-btn {
+            height: 38px !important;
+            width: 100% !important;
+            padding: 0 14px !important;
+            background: var(--bg-tag) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-main) !important;
+            border-radius: 8px !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 10px !important;
+            cursor: pointer !important;
+            box-shadow: none !important;
+            transform: none !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .menu-action-btn i {
+            font-size: 13px !important;
+            color: #3b82f6 !important;
+            flex-shrink: 0;
+        }
+
+        .menu-action-btn:hover {
+            background: var(--bg-btn-hover) !important;
+            color: var(--text-title) !important;
+            border-color: rgba(59, 130, 246, 0.3) !important;
+            box-shadow: var(--shadow-btn-hover) !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .menu-action-btn.danger {
+            border-color: rgba(239, 68, 68, 0.2) !important;
+        }
+        .menu-action-btn.danger i {
+            color: #ef4444 !important;
+        }
+        .menu-action-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.15) !important;
+            color: #f87171 !important;
+            border-color: rgba(239, 68, 68, 0.3) !important;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15) !important;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .control-group.connection-group {
+            flex: 1 1 auto;
+        }
+
+        .control-group.message-group {
+            flex: 1 1 100%;
+        }
+
+        select, input[type="text"] {
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-input);
+            color: var(--text-title);
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        select:focus, input[type="text"]:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            background-color: var(--bg-input);
+        }
+
+        /* Specific elements width settings */
+        #port-select {
+            flex: 1;
+            min-width: 100px;
+            max-width: 160px;
+            cursor: pointer;
+        }
+
+        #msg-type-select {
+            flex: 0 0 140px;
+            cursor: pointer;
+        }
+
+        #msg-input {
+            flex: 1.5;
+            min-width: 100px;
+        }
+
+        #payload-input {
+            flex: 2;
+            min-width: 120px;
+        }
+
+        button {
+            height: 38px;
+            width: 38px;
+            padding: 0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
+
+        button i {
+            font-size: 14px;
+        }
+
+        #refresh-btn {
+            background: var(--bg-tag);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+        #refresh-btn:hover {
+            background: var(--bg-btn-hover);
+            color: var(--text-btn-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-btn-hover);
+        }
+
+        #ack-btn {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+        #ack-btn.disabled {
+            background: rgba(30, 41, 59, 0.5) !important;
+            color: #64748b;
+            box-shadow: none;
+            opacity: 0.6;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+        #ack-btn:hover:not(.disabled) {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(16, 185, 129, 0.3);
+        }
+
+        #send-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+        #send-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+        }
+
+        #disconnect-btn {
+            border: 1px solid var(--border-color) !important;
+            color: #ffffff !important;
+        }
+        #disconnect-btn:hover {
+            filter: brightness(1.15) saturate(1.1);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-btn-hover);
+        }
+
+        #clear-btn {
+            background: var(--bg-tag);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+        #clear-btn:hover {
+            background: rgba(239, 68, 68, 0.1) !important;
+            color: #f87171 !important;
+            border-color: rgba(239, 68, 68, 0.2) !important;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-btn-hover);
+        }
+
+        /* Message Type Toggle group styling */
+        .type-toggle-group {
+            display: flex;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .type-toggle {
+            height: 32px !important;
+            width: 34px !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            color: var(--text-muted) !important;
+            border-radius: 6px !important;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .type-toggle:hover:not(.disabled) {
+            color: var(--text-title) !important;
+            background: var(--bg-btn-hover) !important;
+        }
+
+        .type-toggle.active:not(.disabled) {
+            color: #3b82f6 !important;
+            background: rgba(59, 130, 246, 0.15) !important;
+            border: 1px solid rgba(59, 130, 246, 0.2) !important;
+        }
+
+        /* Lock button styling */
+        #lock-btn {
+            background: var(--bg-tag);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+
+        #lock-btn:hover {
+            background: var(--bg-btn-hover);
+            color: var(--text-btn-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-btn-hover);
+        }
+
+        #lock-btn.locked {
+            background: linear-gradient(135deg, #d97706, #b45309) !important;
+            color: #ffffff !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3) !important;
+            animation: lock-glow 2s infinite !important;
+        }
+
+        @keyframes lock-glow {
+            0% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(217, 119, 6, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
+        }
+
+        /* Log lines styling */
+        .log-line {
+            display: flex;
+            align-items: flex-start;
+            padding: 8px 12px !important;
+            margin-bottom: 0px !important;
+            background: var(--bg-log-line);
+            border: 1px solid var(--border-line) !important;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            line-height: 1.5;
+        }
+
+        .log-line:hover {
+            background: var(--bg-log-line-hover);
+            background: var(--bg-log-line-hover);
+            box-shadow: var(--shadow-line-hover);
+        }
+
+        .log-time {
+            display: inline-block !important;
+            flex: 0 0 95px !important;
+            margin-right: 12px;
+            font-size: 11px;
+            opacity: 0.75;
+            color: var(--text-muted);
+            user-select: none;
+            text-align: left;
+        }
+
+        .log-dir {
+            display: inline-block !important;
+            flex: 0 0 38px !important;
+            font-size: 11px;
+            font-weight: 700 !important;
+            padding: 2px 0px !important;
+            border-radius: 4px;
+            margin-right: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            user-select: none;
+            text-align: center;
+        }
+
+        /* Direction badges based on text colors sent from JS */
+        .log-dir[style*="#28a745"] {
+            background: rgba(16, 185, 129, 0.12) !important;
+            color: #10b981 !important;
+        }
+        .log-dir[style*="#007bff"] {
+            background: rgba(59, 130, 246, 0.12) !important;
+            color: #3b82f6 !important;
+        }
+        .log-dir[style*="#dc3545"] {
+            background: rgba(239, 68, 68, 0.12) !important;
+            color: #ef4444 !important;
+        }
+
+        .log-type {
+            display: inline-block !important;
+            flex: 0 0 55px !important;
+            font-size: 11px;
+            font-weight: 600 !important;
+            opacity: 0.7;
+            margin-right: 12px;
+            color: var(--text-muted);
+            user-select: none;
+            text-align: left;
+        }
+
+        .log-icon {
+            display: inline-flex;
+            flex: 0 0 16px !important;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            height: 18px;
+        }
+
+        .log-msg {
+            flex: 1;
+            word-break: break-all;
+            white-space: pre-wrap;
+            color: var(--text-main);
+        }
+
+        /* Pulse animation on port-select for heartbeat */
+        @keyframes selector-heartbeat {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+                border-color: rgba(16, 185, 129, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.2);
+                border-color: #10b981;
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+                border-color: var(--border-color);
+            }
+        }
+
+        .heartbeat-pulse {
+            animation: selector-heartbeat 1.2s ease-in-out !important;
+        }
+
+        /* Hide Timestamps global toggler */
+        #logger-display.hide-timestamps .log-time {
+            display: none !important;
+        }
+
+        /* Filter Picker popup and layout styles */
+        .filter-picker-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .filter-popup-card {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 220px;
+            background: var(--bg-controls);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .filter-popup-card.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .filter-options {
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-separator {
+            border: 0;
+            border-top: 1px solid var(--border-color);
+            margin: 4px 0;
+            width: 100%;
+        }
+
+        .filter-group-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-option label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--text-main);
+            cursor: pointer;
+            width: 100%;
+            user-select: none;
+        }
+
+        .filter-option input[type="checkbox"] {
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+            accent-color: #3b82f6;
+        }
+
+        .filter-badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .filter-badge.tx-badge {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+
+        .filter-badge.rx-badge {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+        }
+
+        .filter-badge.sys-badge {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+        }
+
+
+
+        /* Calibration modal styling overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(7, 10, 19, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background: var(--bg-controls);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 320px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transform: scale(0.9);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+        }
+
+        .modal-overlay.open .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-title);
+        }
+
+        .modal-close-btn {
+            background: transparent !important;
+            border: none !important;
+            color: var(--text-muted) !important;
+            cursor: pointer;
+            font-size: 14px;
+            width: auto !important;
+            height: auto !important;
+        }
+        .modal-close-btn:hover {
+            color: var(--text-title) !important;
+        }
+
+        .modal-body {
+            padding: 18px;
+        }
+
+        .modal-body p {
+            margin: 0 0 12px 0;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .modal-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .modal-input-wrapper input {
+            width: 100%;
+            padding: 10px 14px;
+            padding-right: 50px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-input);
+            color: var(--text-title);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .modal-input-wrapper input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        #cal-modal-unit {
+            position: absolute;
+            right: 14px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .modal-footer {
+            padding: 12px 18px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            height: 32px !important;
+            width: auto !important;
+            padding: 0 16px !important;
+            border-radius: 6px !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            color: white !important;
+        }
+        .modal-btn.primary:hover {
+            filter: brightness(1.1);
+        }
+
+        .modal-btn.secondary {
+            background: var(--bg-tag) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-muted) !important;
+        }
+        .modal-btn.secondary:hover {
+            background: var(--bg-btn-hover) !important;
+            color: var(--text-title) !important;
+        }
+    </style>
+
+    <!-- Moment.js -->
+    <script src="assets/js/moment.min.js"></script>
+</head>
+<body class="disconnected">
+    <div id="logger-container">
+        <div id="titlebar">
+            <div class="titlebar-drag-region"></div>
+            <div class="titlebar-logo">
+                <i class="fas fa-terminal"></i>
+                <span>GatorByte GDC</span>
+            </div>
+            <div class="titlebar-window-controls">
+                <button type="button" id="window-minimize" class="titlebar-btn" title="Minimize"><i class="fas fa-minus"></i></button>
+                <button type="button" id="window-maximize" class="titlebar-btn" title="Maximize"><i class="fas fa-square"></i></button>
+                <button type="button" id="window-close" class="titlebar-btn close" title="Close"><i class="fas fa-xmark"></i></button>
+            </div>
+        </div>
+        <select id="port-select" style="display: none;"></select>
+        <div id="logger-header">
+            <div class="header-title">
+                <span class="status-dot"></span>
+                <span>GatorByte Device Console</span>
+            </div>
+            <div class="header-info">
+                <span class="info-tag"><i class="fas fa-bolt"></i> 115200 bps</span>
+                <span class="info-tag"><i class="fas fa-compress"></i> COBS</span>
+                
+                <div class="port-picker-container">
+                    <button type="button" id="port-picker-btn" class="header-action-btn wide" title="Select COM Port">
+                        <i class="fas fa-plug"></i> <span>Select Port</span>
+                    </button>
+                    
+                    <div id="port-popup" class="port-popup-card">
+                        <div class="popup-header">
+                            <span>COM Ports</span>
+                            <button type="button" id="refresh-btn" title="Refresh Ports"><i class="fas fa-sync"></i></button>
+                        </div>
+                        <div id="port-list" class="popup-body">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="disconnect-btn" class="header-action-btn" title="Disconnect"><i class="fas fa-link-slash"></i></button>
+                
+                <button type="button" id="lock-btn" class="header-action-btn unlocked" title="Lock Arduino GDC Mode"><i class="fas fa-lock-open"></i></button>
+                
+                <button type="button" id="clear-btn" class="header-action-btn" title="Clear Log"><i class="fas fa-trash"></i></button>
+                
+                <div class="filter-picker-container">
+                    <button type="button" id="filter-btn" class="header-action-btn" title="Filter Log Traffic">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                    
+                    <div id="filter-popup" class="filter-popup-card">
+                        <div class="popup-header">
+                            <span>Filter Traffic</span>
+                        </div>
+                        <div class="popup-body filter-options">
+                            <div class="filter-option">
+                                <label>
+                                    <input type="checkbox" id="filter-show-time" checked>
+                                    <span>Show Timestamps</span>
+                                </label>
+                            </div>
+                            <hr class="filter-separator">
+                            <div class="filter-group-title">Direction</div>
+                            <div class="filter-option">
+                                <label>
+                                    <input type="checkbox" class="filter-dir-checkbox" data-dir="TX" checked>
+                                    <span class="filter-badge tx-badge">TX</span>
+                                </label>
+                            </div>
+                            <div class="filter-option">
+                                <label>
+                                    <input type="checkbox" class="filter-dir-checkbox" data-dir="RX" checked>
+                                    <span class="filter-badge rx-badge">RX</span>
+                                </label>
+                            </div>
+                            <div class="filter-option">
+                                <label>
+                                    <input type="checkbox" class="filter-dir-checkbox" data-dir="SYS" checked>
+                                    <span class="filter-badge sys-badge">SYS</span>
+                                </label>
+                            </div>
+                            <hr class="filter-separator">
+                            <div class="filter-group-title">Types</div>
+                            <div class="filter-option">
+                                <label>
+                                    <input type="checkbox" class="filter-type-checkbox" data-type="CMD" checked>
+                                    <span>CMD (Command)</span>
+                                </label>
+                            </div>
+                            <div class="filter-option">
+                                <label>
+                                    <input type="checkbox" class="filter-type-checkbox" data-type="MSG" checked>
+                                    <span>MSG (Message)</span>
+                                </label>
+                            </div>
+                            <div class="filter-option">
+                                <label>
+                                    <input type="checkbox" class="filter-type-checkbox" data-type="LOG" checked>
+                                    <span>LOG (Prints)</span>
+                                </label>
+                            </div>
+                            <div class="filter-option">
+                                <label>
+                                    <input type="checkbox" class="filter-type-checkbox" data-type="ACK" checked>
+                                    <span>ACK / NACK</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="theme-btn" class="header-action-btn" title="Switch to Light Theme"><i class="fas fa-sun"></i></button>
+            </div>
+        </div>
+        <div id="logger-display"></div>
+        <div id="logger-controls">
+            <div class="menu-tabs">
+                <button type="button" class="menu-tab active" data-tab="command"><i class="fas fa-terminal"></i> Command Mode</button>
+                <button type="button" class="menu-tab" data-tab="readings"><i class="fas fa-chart-line"></i> Readings</button>
+                <button type="button" class="menu-tab" data-tab="calibration"><i class="fas fa-compass"></i> Calibration</button>
+                <button type="button" class="menu-tab" data-tab="configuration"><i class="fas fa-sliders"></i> Configuration</button>
+                <button type="button" class="menu-tab" data-tab="storage"><i class="fas fa-database"></i> Storage</button>
+            </div>
+            
+            <div id="tab-command" class="tab-panel active">
+                <div class="control-group message-group" style="width: 100%;">
+                    <select id="msg-type-select" style="display: none;">
+                        <option value="1">Command (0x01)</option>
+                        <option value="2">Message (0x02)</option>
+                    </select>
+                    <div class="type-toggle-group">
+                        <button type="button" id="type-cmd-btn" class="type-toggle active" title="Command (0x01)"><i class="fas fa-terminal"></i></button>
+                        <button type="button" id="type-msg-btn" class="type-toggle" title="Message (0x02)"><i class="fas fa-message"></i></button>
+                    </div>
+                    <input type="text" id="msg-input" placeholder="Enter command" list="command-suggestions">
+                    <datalist id="command-suggestions"></datalist>
+                    <input type="text" id="payload-input" placeholder="Enter payload" list="payload-suggestions">
+                    <datalist id="payload-suggestions"></datalist>
+                    <button id="ack-btn" title="Toggle ACK request"><i class="fas fa-check-square"></i></button>
+                    <button id="send-btn" title="Send"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+
+            <div id="tab-readings" class="tab-panel">
+                <div class="menu-grid">
+                    <button type="button" class="menu-action-btn readings-trigger-btn" data-sensor="ec" title="Request EC readings">
+                        <i class="fas fa-flask"></i> Read EC
+                    </button>
+                    <button type="button" class="menu-action-btn readings-trigger-btn" data-sensor="rtd" title="Request RTD temperature readings">
+                        <i class="fas fa-temperature-half"></i> Read RTD
+                    </button>
+                </div>
+            </div>
+
+            <div id="tab-calibration" class="tab-panel">
+                <div class="menu-grid">
+                    <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="ec:calibrate" data-prefix="dry" data-default="0" data-unit="" data-title="EC Dry Calibration" data-desc="Ensure sensor is clean and dry. Value is usually 0.">
+                        <i class="fas fa-wind"></i> Calibrate EC Dry
+                    </button>
+                    <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="ec:calibrate" data-prefix="low" data-default="1413" data-unit="µS/cm" data-title="EC Low Calibration" data-desc="Submerge sensor in low calibration solution (e.g. 1413 µS/cm).">
+                        <i class="fas fa-water"></i> Calibrate EC Low
+                    </button>
+                    <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="ec:calibrate" data-prefix="high" data-default="12880" data-unit="µS/cm" data-title="High EC Calibration" data-desc="Submerge sensor in high calibration solution (e.g. 12880 µS/cm).">
+                        <i class="fas fa-fill-drip"></i> Calibrate EC High
+                    </button>
+                    <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="rtd:calibrate" data-prefix="custom" data-default="25.0" data-unit="°C" data-title="RTD Temp Calibration" data-desc="Enter the reference temperature of the solution in °C.">
+                        <i class="fas fa-gear"></i> Calibrate RTD Custom
+                    </button>
+                </div>
+            </div>
+
+            <div id="tab-configuration" class="tab-panel">
+                <div class="menu-grid">
+                    <button type="button" class="menu-action-btn" data-cmd="ping" data-payload="" title="Ping the microcontroller">
+                        <i class="fas fa-wifi"></i> Ping Device
+                    </button>
+                    <button type="button" class="menu-action-btn" data-cmd="time:fetch" data-payload="" title="Retrieve the current RTC time from device">
+                        <i class="fas fa-clock"></i> Fetch Time
+                    </button>
+                    <button type="button" class="menu-action-btn" data-cmd="time:sync" data-payload="dynamic" title="Sync current system timestamp to device">
+                        <i class="fas fa-rotate"></i> Sync Time
+                    </button>
+                </div>
+            </div>
+
+            <div id="tab-storage" class="tab-panel">
+                <div class="menu-grid">
+                    <button type="button" class="menu-action-btn" data-action="request-file" title="Download log file from microcontroller storage">
+                        <i class="fas fa-file-arrow-down"></i> Request File
+                    </button>
+                    <button type="button" class="menu-action-btn" data-cmd="storage:list" data-payload="" title="List all stored data files">
+                        <i class="fas fa-list-ul"></i> List Storage
+                    </button>
+                    <button type="button" class="menu-action-btn danger" data-cmd="storage:format" data-payload="" title="Format microSD storage (DESTRUCTIVE)">
+                        <i class="fas fa-triangle-exclamation"></i> Format Storage
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="calibration-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span id="cal-modal-title">Calibrate Sensor</span>
+                <button type="button" class="modal-close-btn" id="cal-modal-close"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p id="cal-modal-desc">Enter the calibration standard reference value:</p>
+                <div class="modal-input-wrapper">
+                    <input type="text" id="cal-modal-input" placeholder="e.g. 1413">
+                    <span id="cal-modal-unit"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn secondary" id="cal-modal-cancel">Cancel</button>
+                <button type="button" class="modal-btn primary" id="cal-modal-submit">Calibrate</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="readings-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span id="readings-modal-title">Read Sensor</span>
+                <button type="button" class="modal-close-btn" id="readings-modal-close"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p id="readings-modal-desc">Enter the number of readings to take:</p>
+                <div class="modal-input-wrapper">
+                    <input type="number" id="readings-modal-input" min="1" value="1" style="padding-right: 14px;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn secondary" id="readings-modal-cancel">Cancel</button>
+                <button type="button" class="modal-btn primary" id="readings-modal-submit">Request Readings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
