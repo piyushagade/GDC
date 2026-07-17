@@ -28,7 +28,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "GatorByte Device Console",
+  "description": "GatorByte Desktop Client",
   "dependencies": {
     "@serialport/parser-delimiter": "^13.0.0",
     "buffer-crc32": "^1.0.0",
