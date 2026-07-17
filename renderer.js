@@ -234,6 +234,91 @@ function setupLogger() {
         }
     });
 
+    // Heartbeat Watchdog & Device Active States
+    let heartbeatWatchdog = null;
+    let deviceActive = false;
+
+    function setDeviceActive(active) {
+        deviceActive = active;
+        const buttons = $('.tab-panel:not(#tab-command) button, .tab-panel:not(#tab-command) input, .tab-panel:not(#tab-command) select');
+        if (active) {
+            buttons.prop('disabled', false).css('opacity', '1');
+        } else {
+            buttons.prop('disabled', true).css('opacity', '0.5');
+        }
+
+        // Toggle splash overlay in GUI Mode
+        if (guiModeActive) {
+            if (active) {
+                $('#gui-waiting-overlay').css('display', 'none');
+                $('.menu-tabs').css('display', 'flex');
+                
+                // Show the active tab panel
+                const activeTab = $('.menu-tab.active').attr('data-tab');
+                $('.tab-panel').removeClass('active');
+                $(`#tab-${activeTab}`).addClass('active');
+            } else {
+                $('#gui-waiting-overlay').css('display', 'flex');
+                $('.menu-tabs').css('display', 'none');
+                $('.tab-panel').removeClass('active');
+            }
+        } else {
+            // Command Mode
+            $('#gui-waiting-overlay').css('display', 'none');
+            $('.menu-tabs').css('display', 'none');
+            
+            // Show only the command panel
+            $('.tab-panel').removeClass('active');
+            $('#tab-command').addClass('active');
+        }
+    }
+
+    function resetHeartbeatWatchdog() {
+        if (!deviceActive) {
+            setDeviceActive(true);
+        }
+        if (heartbeatWatchdog) {
+            clearTimeout(heartbeatWatchdog);
+        }
+        heartbeatWatchdog = setTimeout(() => {
+            setDeviceActive(false);
+        }, 12000);
+    }
+
+    // Layout Mode Toggle Logic (Console Mode vs GUI Only Mode)
+    const layoutToggleBtn = $('#layout-toggle-btn');
+    let guiModeActive = localStorage.getItem('guiModeActive') !== 'false';
+
+    function applyLayoutMode(active) {
+        if (active) {
+            $('body').addClass('gui-only-mode');
+            layoutToggleBtn.html('<i class="fas fa-terminal"></i>').attr('title', 'Switch to Command Mode');
+            
+            // Switch away from command tab if it is active
+            const currentTab = $('.menu-tab.active').attr('data-tab');
+            if (currentTab === 'command') {
+                $('.menu-tab[data-tab="readings"]').click();
+            }
+        } else {
+            $('body').removeClass('gui-only-mode');
+            layoutToggleBtn.html('<i class="fas fa-desktop"></i>').attr('title', 'Switch to GUI-Only Mode');
+            
+            // Switch to command tab when returning to command mode
+            $('.menu-tab[data-tab="command"]').click();
+        }
+        guiModeActive = active;
+        localStorage.setItem('guiModeActive', active ? 'true' : 'false');
+        
+        // Re-apply disabled/enabled states
+        setDeviceActive(deviceActive);
+    }
+
+    applyLayoutMode(guiModeActive);
+
+    layoutToggleBtn.on('click', () => {
+        applyLayoutMode(!guiModeActive);
+    });
+
     // Port Picker Popup Toggle
     $('#port-picker-btn').on('click', (e) => {
         e.stopPropagation();
@@ -885,6 +970,11 @@ function updateConnectButton(connected) {
     if (!connected) {
         btn.html('<i class="fas fa-link-slash"></i>').attr('title', 'Disconnect').css('background', '#dc3545');
         $('body').addClass('disconnected').removeClass('connected');
+        if (heartbeatWatchdog) {
+            clearTimeout(heartbeatWatchdog);
+            heartbeatWatchdog = null;
+        }
+        setDeviceActive(false);
     } else {
         btn.html('<i class="fas fa-link"></i>').attr('title', 'Connect').css('background', '#28a745');
         $('body').addClass('connected').removeClass('disconnected');
@@ -993,6 +1083,9 @@ function handlePacket(buf) {
         data = buf.slice(0, buf.length - 4);
         if (crc32.unsigned(data) !== receivedCrc) return;
     }
+
+    // Refresh connection watchdog activity
+    resetHeartbeatWatchdog();
 
     // Atomic Unpacking
     const type = data[0];
