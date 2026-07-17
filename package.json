@@ -4,17 +4,40 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "package-win": "electron-builder build --win --dir",
+    "package-linux": "electron-builder build --linux --dir",
+    "package-all": "electron-builder build --win --linux --dir"
+  },
+  "build": {
+    "appId": "com.gatorbyte.gdc",
+    "productName": "GatorByteGDC",
+    "npmRebuild": false,
+    "win": {
+      "target": "dir",
+      "icon": "assets/images/icon.png"
+    },
+    "linux": {
+      "target": "dir",
+      "category": "Development"
+    },
+    "directories": {
+      "output": "dist"
+    }
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "GatorByte Device Console",
   "dependencies": {
     "@serialport/parser-delimiter": "^13.0.0",
     "cobs": "^0.2.1",
-    "electron": "^40.2.1",
     "jquery": "^4.0.0",
     "serialport": "^13.0.0"
+  },
+  "devDependencies": {
+    "electron": "^40.2.1",
+    "electron-builder": "^26.15.3",
+    "electron-packager": "^17.1.2"
   }
 }
