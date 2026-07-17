@@ -1,4 +1,4 @@
-# GatorByte Device Console (GDC)
+# GatorByte Desktop Client (GDC)
 
 GatorByte GDC is an Electron-based desktop application designed for serial monitoring, real-time logging, diagnostics, and calibration of GatorByte hardware devices. It supports both a clean graphical interface (GUI Mode) and a developer terminal console (Command Mode).
 
