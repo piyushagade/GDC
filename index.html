@@ -34,6 +34,8 @@
             --bg-titlebar: rgba(7, 10, 19, 0.95);
             --text-titlebar: #94a3b8;
             --btn-titlebar-hover: rgba(255, 255, 255, 0.08);
+            --bg-loading-overlay: rgba(7, 10, 19, 0.85);
+            --text-loading-overlay: #ffffff;
         }
 
         body.light-theme {
@@ -62,6 +64,8 @@
             --bg-titlebar: rgba(226, 232, 240, 0.95);
             --text-titlebar: #64748b;
             --btn-titlebar-hover: rgba(15, 23, 42, 0.08);
+            --bg-loading-overlay: rgba(241, 245, 249, 0.9);
+            --text-loading-overlay: #0f172a;
         }
 
         body.dark-theme {
@@ -90,6 +94,8 @@
             --bg-titlebar: rgba(14, 14, 14, 0.95);
             --text-titlebar: #737373;
             --btn-titlebar-hover: rgba(255, 255, 255, 0.05);
+            --bg-loading-overlay: rgba(8, 8, 8, 0.9);
+            --text-loading-overlay: #f5f5f5;
         }
 
         body {
@@ -1102,6 +1108,340 @@
             background: var(--bg-btn-hover) !important;
             color: var(--text-title) !important;
         }
+
+        /* Wizard Specific CSS */
+        .wizard-steps-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 25px 5px 25px;
+            background: rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid var(--border-line);
+        }
+        .step-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--bg-tag);
+            border: 2px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .step-dot.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+        }
+        .step-dot.completed {
+            background: #10b981;
+            border-color: #10b981;
+            color: #ffffff;
+        }
+        .step-line {
+            flex: 1;
+            height: 2px;
+            background: var(--border-color);
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        .step-line.completed {
+            background: #10b981;
+        }
+        .wizard-step-panel {
+            display: none;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .wizard-step-panel.active {
+            display: flex;
+        }
+        .wizard-instruction-icon {
+            font-size: 42px;
+            color: #3b82f6;
+            text-align: center;
+            margin: 10px 0 20px 0;
+            animation: bounce-slow 2s infinite ease-in-out;
+        }
+        .wizard-instruction-text {
+            line-height: 1.6 !important;
+            font-size: 13px !important;
+            color: var(--text-main) !important;
+            text-align: center;
+        }
+        .preset-pills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .preset-pill {
+            background: var(--bg-tag) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-muted) !important;
+            padding: 6px 16px !important;
+            border-radius: 6px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            width: auto !important;
+            height: auto !important;
+        }
+        .preset-pill:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        .preset-pill.active {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .wizard-loading-container, .wizard-result-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
+        }
+        .wizard-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        .wizard-status-text {
+            font-size: 13px !important;
+            color: var(--text-title) !important;
+            font-weight: 500;
+            text-align: center;
+        }
+        .wizard-result-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .wizard-result-icon.success {
+            color: #10b981;
+            animation: scale-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .wizard-result-icon.error {
+            color: #ef4444;
+            animation: shake 0.5s ease-in-out;
+        }
+        .wizard-result-text {
+            font-size: 14px !important;
+            color: var(--text-title) !important;
+            font-weight: 600;
+            text-align: center;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes scale-up {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        /* Sensor Readings Styling */
+        .readings-cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            margin-top: 2px;
+        }
+        .sensor-card {
+            background: var(--bg-tag);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .sensor-card:hover {
+            border-color: var(--text-muted);
+            background: var(--bg-log-line-hover);
+        }
+        .sensor-card-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .sensor-icon {
+            color: var(--text-muted);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sensor-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .sensor-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .sensor-value-display {
+            margin-left: auto;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+        .sensor-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-title);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .sensor-unit {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .sensor-card-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-line);
+            padding-top: 8px;
+            margin-top: 2px;
+        }
+        .sensor-history {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .history-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .history-dots {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .history-pill {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .history-empty {
+            font-size: 9px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        .sensor-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sensor-read-btn {
+            height: 26px !important;
+            padding: 0 12px !important;
+            border-radius: 4px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            background: var(--bg-input) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-main) !important;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: auto !important;
+        }
+        .sensor-read-btn:hover {
+            background: var(--bg-btn-hover) !important;
+            color: var(--text-title) !important;
+            border-color: var(--text-muted) !important;
+        }
+        .read-count-container {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0 6px;
+            height: 26px;
+            box-sizing: border-box;
+        }
+        .read-count-input {
+            width: 22px;
+            background: transparent;
+            border: none;
+            color: var(--text-title);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            outline: none;
+            text-align: center;
+            padding: 0;
+            margin: 0;
+        }
+        .read-count-input::-webkit-outer-spin-button,
+        .read-count-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .read-count-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            user-select: none;
+            margin-left: 2px;
+        }
+        /* Loading overlay for card when reading is active */
+        .sensor-card.loading::after {
+            content: 'Reading Sensor...';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-loading-overlay);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-loading-overlay);
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 5;
+        }
     </style>
 
     <!-- Moment.js -->
@@ -1148,6 +1488,7 @@
                 </div>
 
                 <button type="button" id="disconnect-btn" class="header-action-btn" title="Disconnect"><i class="fas fa-link-slash"></i></button>
+                <button type="button" id="ping-btn" class="header-action-btn" title="Ping Device"><i class="fas fa-wifi"></i></button>
                 
                 <button type="button" id="lock-btn" class="header-action-btn unlocked" title="Lock Arduino GDC Mode"><i class="fas fa-lock-open"></i></button>
                 
@@ -1228,6 +1569,7 @@
                 <button type="button" class="menu-tab active" data-tab="command"><i class="fas fa-terminal"></i> Command Mode</button>
                 <button type="button" class="menu-tab" data-tab="readings"><i class="fas fa-chart-line"></i> Readings</button>
                 <button type="button" class="menu-tab" data-tab="calibration"><i class="fas fa-compass"></i> Calibration</button>
+                <button type="button" class="menu-tab" data-tab="rtc"><i class="fas fa-clock"></i> RTC</button>
                 <button type="button" class="menu-tab" data-tab="configuration"><i class="fas fa-sliders"></i> Configuration</button>
                 <button type="button" class="menu-tab" data-tab="storage"><i class="fas fa-database"></i> Storage</button>
             </div>
@@ -1252,13 +1594,68 @@
             </div>
 
             <div id="tab-readings" class="tab-panel">
-                <div class="menu-grid">
-                    <button type="button" class="menu-action-btn readings-trigger-btn" data-sensor="ec" title="Request EC readings">
-                        <i class="fas fa-flask"></i> Read EC
-                    </button>
-                    <button type="button" class="menu-action-btn readings-trigger-btn" data-sensor="rtd" title="Request RTD temperature readings">
-                        <i class="fas fa-temperature-half"></i> Read RTD
-                    </button>
+                <div class="readings-cards-grid">
+                    <!-- EC Card -->
+                    <div class="sensor-card" id="sensor-card-ec">
+                        <div class="sensor-card-top">
+                            <span class="sensor-icon"><i class="fas fa-flask"></i></span>
+                            <div class="sensor-info">
+                                <span class="sensor-name">EC Sensor</span>
+                            </div>
+                            <div class="sensor-value-display">
+                                <span class="sensor-value" id="sensor-val-ec">--</span>
+                                <span class="sensor-unit">µS/cm</span>
+                            </div>
+                        </div>
+                        <div class="sensor-card-bottom">
+                            <div class="sensor-history">
+                                <span class="history-label">Recent:</span>
+                                <div class="history-dots" id="history-dots-ec">
+                                    <span class="history-empty">None</span>
+                                </div>
+                            </div>
+                            <div class="sensor-card-actions">
+                                <button type="button" class="sensor-read-btn" data-sensor="ec">
+                                    <i class="fas fa-play" style="font-size: 8px;"></i> Read
+                                </button>
+                                <div class="read-count-container">
+                                    <input type="number" class="read-count-input" id="read-count-ec" min="1" max="100" value="1">
+                                    <span class="read-count-label">x</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RTD Card -->
+                    <div class="sensor-card" id="sensor-card-rtd">
+                        <div class="sensor-card-top">
+                            <span class="sensor-icon"><i class="fas fa-temperature-half"></i></span>
+                            <div class="sensor-info">
+                                <span class="sensor-name">RTD Temp</span>
+                            </div>
+                            <div class="sensor-value-display">
+                                <span class="sensor-value" id="sensor-val-rtd">--</span>
+                                <span class="sensor-unit">°C</span>
+                            </div>
+                        </div>
+                        <div class="sensor-card-bottom">
+                            <div class="sensor-history">
+                                <span class="history-label">Recent:</span>
+                                <div class="history-dots" id="history-dots-rtd">
+                                    <span class="history-empty">None</span>
+                                </div>
+                            </div>
+                            <div class="sensor-card-actions">
+                                <button type="button" class="sensor-read-btn" data-sensor="rtd">
+                                    <i class="fas fa-play" style="font-size: 8px;"></i> Read
+                                </button>
+                                <div class="read-count-container">
+                                    <input type="number" class="read-count-input" id="read-count-rtd" min="1" max="100" value="1">
+                                    <span class="read-count-label">x</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1279,17 +1676,43 @@
                 </div>
             </div>
 
-            <div id="tab-configuration" class="tab-panel">
+            <div id="tab-rtc" class="tab-panel">
                 <div class="menu-grid">
-                    <button type="button" class="menu-action-btn" data-cmd="ping" data-payload="" title="Ping the microcontroller">
-                        <i class="fas fa-wifi"></i> Ping Device
-                    </button>
                     <button type="button" class="menu-action-btn" data-cmd="time:fetch" data-payload="" title="Retrieve the current RTC time from device">
                         <i class="fas fa-clock"></i> Fetch Time
                     </button>
                     <button type="button" class="menu-action-btn" data-cmd="time:sync" data-payload="dynamic" title="Sync current system timestamp to device">
                         <i class="fas fa-rotate"></i> Sync Time
                     </button>
+                </div>
+            </div>
+
+            <div id="tab-configuration" class="tab-panel">
+                <div class="config-container" style="display: flex; gap: 20px; width: 100%;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Config Name</label>
+                                <input type="text" id="config-name" placeholder="e.g. config" value="config">
+                            </div>
+                            <div style="flex: 2; display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Key Path</label>
+                                <input type="text" id="config-keypath" placeholder="e.g. mqtt.broker">
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Value (for Set)</label>
+                            <input type="text" id="config-value" placeholder="e.g. 192.168.1.100">
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; justify-content: flex-end; gap: 10px;">
+                        <button type="button" class="menu-action-btn" id="config-get-btn" style="height: 38px !important; width: 120px !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important;">
+                            <i class="fas fa-file-import"></i> Get Value
+                        </button>
+                        <button type="button" class="menu-action-btn" id="config-set-btn" style="height: 38px !important; width: 120px !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; background: linear-gradient(135deg, #3b82f6, #2563eb) !important; color: white !important; border: none !important;">
+                            <i class="fas fa-file-export"></i> Set Value
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1310,21 +1733,62 @@
     </div>
 
     <div id="calibration-modal" class="modal-overlay">
-        <div class="modal-card">
+        <div class="modal-card" style="width: 380px;">
             <div class="modal-header">
                 <span id="cal-modal-title">Calibrate Sensor</span>
                 <button type="button" class="modal-close-btn" id="cal-modal-close"><i class="fas fa-xmark"></i></button>
             </div>
+            
+            <div class="wizard-steps-indicator">
+                <div class="step-dot active" data-step="1" title="Preparation">1</div>
+                <div class="step-line" data-step-line="1"></div>
+                <div class="step-dot" data-step="2" title="Reference">2</div>
+                <div class="step-line" data-step-line="2"></div>
+                <div class="step-dot" data-step="3" title="Calibrate">3</div>
+                <div class="step-line" data-step-line="3"></div>
+                <div class="step-dot" data-step="4" title="Status">4</div>
+            </div>
+
             <div class="modal-body">
-                <p id="cal-modal-desc">Enter the calibration standard reference value:</p>
-                <div class="modal-input-wrapper">
-                    <input type="text" id="cal-modal-input" placeholder="e.g. 1413">
-                    <span id="cal-modal-unit"></span>
+                <!-- Step 1: Preparation -->
+                <div class="wizard-step-panel active" data-step="1">
+                    <div class="wizard-instruction-icon"><i class="fas fa-screwdriver-wrench"></i></div>
+                    <p class="wizard-instruction-text" id="cal-modal-desc">Ensure the sensor is clean and properly prepared before continuing.</p>
+                </div>
+
+                <!-- Step 2: Reference Value Selection -->
+                <div class="wizard-step-panel" data-step="2">
+                    <p id="cal-presets-instruction" style="margin: 0 0 8px 0; font-size: 12px; color: var(--text-muted);">Select a standard calibration preset or enter a custom value:</p>
+                    <div class="preset-pills-container" id="cal-presets-container">
+                        <!-- Loaded Dynamically -->
+                    </div>
+                    <div class="modal-input-wrapper" style="margin-top: 15px;">
+                        <input type="text" id="cal-modal-input" placeholder="Enter standard value">
+                        <span id="cal-modal-unit"></span>
+                    </div>
+                </div>
+
+                <!-- Step 3: Calibrating / Serial Transfer -->
+                <div class="wizard-step-panel" data-step="3">
+                    <div class="wizard-loading-container">
+                        <div class="wizard-spinner"></div>
+                        <p class="wizard-status-text" id="cal-loading-status">Sending calibration command...</p>
+                    </div>
+                </div>
+
+                <!-- Step 4: Success / Error -->
+                <div class="wizard-step-panel" data-step="4">
+                    <div class="wizard-result-container">
+                        <div class="wizard-result-icon" id="cal-result-icon"><i class="fas fa-circle-check"></i></div>
+                        <p class="wizard-result-text" id="cal-result-text">Calibration Completed Successfully</p>
+                    </div>
                 </div>
             </div>
+
             <div class="modal-footer">
+                <button type="button" class="modal-btn secondary" id="cal-modal-prev" style="display: none;">Back</button>
                 <button type="button" class="modal-btn secondary" id="cal-modal-cancel">Cancel</button>
-                <button type="button" class="modal-btn primary" id="cal-modal-submit">Calibrate</button>
+                <button type="button" class="modal-btn primary" id="cal-modal-next">Next</button>
             </div>
         </div>
     </div>

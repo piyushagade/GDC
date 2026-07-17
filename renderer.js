@@ -34,6 +34,20 @@ let _lastSentType;
 let _ackRequested = false;
 let isLocked = false;
 
+// Calibration Wizard State
+let currentWizardStep = 1;
+let wizardTimeout = null;
+let pendingCalUnit = "";
+let pendingCalDesc = "";
+let pendingCalDefault = "";
+
+// Readings History & State
+let ecHistory = [];
+let rtdHistory = [];
+let ecTimeout = null;
+let rtdTimeout = null;
+let pendingSensor = null;
+
 // Logger UI Elements
 let heartbeatInterval;
 let loggerDisplay;
@@ -152,6 +166,36 @@ function setupLogger() {
     $('#disconnect-btn').on('click', toggleConnection);
     $('#ack-btn').on('click', toggleAck);
     $('#clear-btn').on('click', () => { if (loggerDisplay) loggerDisplay.empty(); });
+
+    // Ping device from top header
+    $('#ping-btn').on('click', () => {
+        sendAtomicPacket(0x01, "ping", 0x00, "");
+    });
+
+    // Get Configuration
+    $('#config-get-btn').on('click', () => {
+        const name = $('#config-name').val().trim();
+        const keyPath = $('#config-keypath').val().trim();
+        if (!name || !keyPath) {
+            showOnUI('SYS', 'WARN', 'Config Name and Key Path are required.');
+            return;
+        }
+        const payload = `${name},${keyPath}`;
+        sendAtomicPacket(0x01, "config:get", TYPES.PAYLOAD_STRING, payload);
+    });
+
+    // Set Configuration
+    $('#config-set-btn').on('click', () => {
+        const name = $('#config-name').val().trim();
+        const keyPath = $('#config-keypath').val().trim();
+        const value = $('#config-value').val().trim();
+        if (!name || !keyPath || !value) {
+            showOnUI('SYS', 'WARN', 'Config Name, Key Path, and Value are required.');
+            return;
+        }
+        const payload = `${name},${keyPath},${value}`;
+        sendAtomicPacket(0x01, "config:set", TYPES.PAYLOAD_STRING, payload);
+    });
 
     // Theme Toggle Logic: blue -> dark -> light
     const themeBtn = $('#theme-btn');
@@ -298,6 +342,69 @@ function setupLogger() {
     let pendingCalCmd = null;
     let pendingCalPrefix = null;
 
+    // Helper to transition steps in the wizard
+    function showWizardStep(step) {
+        currentWizardStep = step;
+        
+        // Hide all step panels, show active
+        $('.wizard-step-panel').removeClass('active');
+        $(`.wizard-step-panel[data-step="${step}"]`).addClass('active');
+
+        // Update progress dots
+        $('.step-dot').each(function() {
+            const s = parseInt($(this).attr('data-step'));
+            $(this).removeClass('active completed');
+            if (s === step) {
+                $(this).addClass('active');
+            } else if (s < step) {
+                $(this).addClass('completed');
+            }
+        });
+
+        // Update progress lines
+        $('.step-line').each(function() {
+            const lineNum = parseInt($(this).attr('data-step-line'));
+            $(this).removeClass('completed');
+            if (lineNum < step) {
+                $(this).addClass('completed');
+            }
+        });
+
+        // Adjust navigation button labels & visibility
+        if (step === 1) {
+            $('#cal-modal-next').show().text('Next').removeClass('danger').addClass('primary');
+            $('#cal-modal-cancel').show();
+            $('#cal-modal-prev').hide();
+        } else if (step === 2) {
+            $('#cal-modal-next').show().text('Calibrate').removeClass('danger').addClass('primary');
+            $('#cal-modal-cancel').show();
+            $('#cal-modal-prev').show();
+            setTimeout(() => $('#cal-modal-input').focus(), 50);
+        } else if (step === 3) {
+            $('#cal-modal-next').hide();
+            $('#cal-modal-cancel').hide();
+            $('#cal-modal-prev').hide();
+        } else if (step === 4) {
+            $('#cal-modal-next').show().text('Finish').removeClass('danger').addClass('primary');
+            $('#cal-modal-cancel').hide();
+            $('#cal-modal-prev').hide();
+        }
+    }
+
+    // Close/Cancel Calibration Wizard
+    function closeCalibrationWizard() {
+        $('#calibration-modal').removeClass('open');
+        if (wizardTimeout) {
+            clearTimeout(wizardTimeout);
+            wizardTimeout = null;
+        }
+        pendingCalCmd = null;
+        pendingCalPrefix = null;
+        pendingCalUnit = "";
+        pendingCalDesc = "";
+        pendingCalDefault = "";
+    }
+
     // Calibration modal trigger
     $('.calibration-trigger-btn').on('click', function() {
         const cmd = $(this).attr('data-cmd');
@@ -309,96 +416,149 @@ function setupLogger() {
 
         pendingCalCmd = cmd;
         pendingCalPrefix = prefix;
+        pendingCalUnit = unit;
+        pendingCalDesc = desc;
+        pendingCalDefault = defaultValue;
 
         $('#cal-modal-title').text(title);
         $('#cal-modal-desc').text(desc);
         $('#cal-modal-input').val(defaultValue);
         $('#cal-modal-unit').text(unit);
 
-        $('#calibration-modal').addClass('open');
-        setTimeout(() => $('#cal-modal-input').focus(), 50);
-    });
-
-    // Close modal actions
-    $('#cal-modal-close, #cal-modal-cancel, #calibration-modal').on('click', function(e) {
-        if (e.target === this || $(e.target).closest('.modal-card').length === 0 || this.id === 'cal-modal-close' || this.id === 'cal-modal-cancel') {
-            $('#calibration-modal').removeClass('open');
-            pendingCalCmd = null;
-            pendingCalPrefix = null;
+        // Update dynamic instructions to show unit if applicable
+        if (unit) {
+            $('#cal-presets-instruction').text(`Select a standard calibration preset (in ${unit}) or enter a custom value:`);
+        } else {
+            $('#cal-presets-instruction').text('Select a standard calibration preset or enter a custom value:');
         }
-    });
 
-    // Submit calibration
-    $('#cal-modal-submit').on('click', function() {
-        const val = $('#cal-modal-input').val().trim();
-        if (pendingCalCmd && pendingCalPrefix) {
-            const payload = `${pendingCalPrefix},${val}`;
-            sendAtomicPacket(0x01, pendingCalCmd, TYPES.PAYLOAD_STRING, payload);
-            $('#calibration-modal').removeClass('open');
-            pendingCalCmd = null;
-            pendingCalPrefix = null;
+        // Generate preset pills based on sensor and prefix
+        const presetsContainer = $('#cal-presets-container');
+        presetsContainer.empty();
+
+        let presets = [];
+        if (cmd === 'ec:calibrate') {
+            if (prefix === 'low') presets = [84, 1413, 12880];
+            else if (prefix === 'high') presets = [12880, 50000];
+            else if (prefix === 'dry') presets = [0];
+        } else if (cmd === 'rtd:calibrate') {
+            presets = [0.0, 25.0, 100.0];
         }
-    });
 
-    // Support Enter key in modal input
-    $('#cal-modal-input').on('keypress', function(e) {
-        if (e.key === 'Enter') {
-            $('#cal-modal-submit').click();
-        }
-    });
-
-    let pendingSensor = null;
-
-    // Readings modal trigger
-    $('.readings-trigger-btn').on('click', function() {
-        try {
-            fs.appendFileSync('debug_click.txt', 'Readings trigger clicked! Sensor: ' + $(this).attr('data-sensor') + '\n');
-            const sensor = $(this).attr('data-sensor');
-            pendingSensor = sensor;
-
-            const titleName = sensor.toUpperCase();
-            $('#readings-modal-title').text(`Read ${titleName} Sensor`);
-            $('#readings-modal-input').val('1');
-
-            $('#readings-modal').addClass('open');
-            fs.appendFileSync('debug_click.txt', 'Readings modal class added.\n');
-            setTimeout(() => $('#readings-modal-input').focus().select(), 50);
-        } catch (err) {
-            fs.appendFileSync('debug_click.txt', 'ERROR inside readings trigger: ' + err.stack + '\n');
-        }
-    });
-
-    // Close readings modal actions
-    $('#readings-modal-close, #readings-modal-cancel, #readings-modal').on('click', function(e) {
-        if (e.target === this || $(e.target).closest('.modal-card').length === 0 || this.id === 'readings-modal-close' || this.id === 'readings-modal-cancel') {
-            $('#readings-modal').removeClass('open');
-            pendingSensor = null;
-        }
-    });
-
-    // Submit readings request
-    $('#readings-modal-submit').on('click', function() {
-        try {
-            fs.appendFileSync('debug_click.txt', 'Readings modal submit clicked! pendingSensor: ' + pendingSensor + '\n');
-            const count = $('#readings-modal-input').val() || '1';
-            if (pendingSensor) {
-                const command = `${pendingSensor}:read`;
-                sendAtomicPacket(0x01, command, TYPES.PAYLOAD_STRING, count.toString());
-                $('#readings-modal').removeClass('open');
-                pendingSensor = null;
-                fs.appendFileSync('debug_click.txt', 'Readings command sent successfully.\n');
-            } else {
-                fs.appendFileSync('debug_click.txt', 'Warning: pendingSensor was null.\n');
+        presets.forEach(presetVal => {
+            const pill = $('<button type="button">')
+                .addClass('preset-pill')
+                .text(presetVal)
+                .on('click', function() {
+                    $('.preset-pill').removeClass('active');
+                    $(this).addClass('active');
+                    $('#cal-modal-input').val(presetVal);
+                });
+            if (presetVal.toString() === defaultValue.toString()) {
+                pill.addClass('active');
             }
-        } catch (err) {
-            fs.appendFileSync('debug_click.txt', 'ERROR inside submit: ' + err.stack + '\n');
+            presetsContainer.append(pill);
+        });
+
+        $('#calibration-modal').addClass('open');
+        showWizardStep(1);
+    });
+
+    // Back click
+    $('#cal-modal-prev').on('click', function() {
+        if (currentWizardStep > 1) {
+            showWizardStep(currentWizardStep - 1);
         }
     });
 
-    // Support Enter key in readings modal input
-    $('#readings-modal-input').on('keypress', function(e) {
-        if (e.key === 'Enter') {
-            $('#readings-modal-submit').click();
+    // Close actions
+    $('#cal-modal-close, #cal-modal-cancel').on('click', closeCalibrationWizard);
+    
+    // Close on overlay click only if NOT in active calibration process (Step 3)
+    $('#calibration-modal').on('click', function(e) {
+        if (currentWizardStep !== 3 && (e.target === this || $(e.target).closest('.modal-card').length === 0)) {
+            closeCalibrationWizard();
+        }
+    });
+
+    // Wizard Next / Execute action
+    $('#cal-modal-next').on('click', function() {
+        if (currentWizardStep === 1) {
+            showWizardStep(2);
+        } else if (currentWizardStep === 2) {
+            const val = $('#cal-modal-input').val().trim();
+            if (pendingCalCmd && pendingCalPrefix) {
+                const payload = `${pendingCalPrefix},${val}`;
+                
+                // Show Step 3 loading indicator
+                showWizardStep(3);
+                $('#cal-loading-status').text(`Sending calibration command: ${pendingCalCmd} with value ${val}...`);
+                
+                // Send the payload
+                sendAtomicPacket(0x01, pendingCalCmd, TYPES.PAYLOAD_STRING, payload);
+
+                // Set a safety timeout in case the microcontroller fails to reply
+                if (wizardTimeout) clearTimeout(wizardTimeout);
+                wizardTimeout = setTimeout(() => {
+                    if (currentWizardStep === 3) {
+                        $('#cal-result-icon').html('<i class="fas fa-circle-exclamation"></i>').removeClass('success').addClass('error');
+                        $('#cal-result-text').text('Timeout: No response from the device');
+                        showWizardStep(4);
+                    }
+                }, 8000);
+            }
+        } else if (currentWizardStep === 4) {
+            closeCalibrationWizard();
+        }
+    });
+
+    // Support Enter key in modal input to submit from step 2
+    $('#cal-modal-input').on('keypress', function(e) {
+        if (e.key === 'Enter' && currentWizardStep === 2) {
+            $('#cal-modal-next').click();
+        }
+    });
+
+    // Helper to update History Pills on Sensor Cards
+    function updateHistoryUI(sensor, historyArray) {
+        const container = $(`#history-dots-${sensor}`);
+        container.empty();
+        if (historyArray.length === 0) {
+            container.append($('<span>').addClass('history-empty').text('None'));
+            return;
+        }
+        historyArray.forEach(val => {
+            container.append($('<span>').addClass('history-pill').text(val));
+        });
+    }
+
+    // Trigger Sensor Reading from Cards (Dynamic Count)
+    $('.sensor-read-btn').on('click', function() {
+        const sensor = $(this).attr('data-sensor');
+        pendingSensor = sensor;
+        
+        // Fetch count dynamically
+        const countVal = $(`#read-count-${sensor}`).val() || "1";
+        const countNum = parseInt(countVal);
+
+        $(`#sensor-card-${sensor}`).addClass('loading');
+        sendAtomicPacket(0x01, `${sensor}:read`, TYPES.PAYLOAD_STRING, countVal.toString());
+
+        // Set safety timeout based on number of readings (5s baseline + 1.2s per reading)
+        const timeoutMs = 5000 + (countNum * 1200);
+
+        if (sensor === 'ec') {
+            if (ecTimeout) clearTimeout(ecTimeout);
+            ecTimeout = setTimeout(() => {
+                $(`#sensor-card-ec`).removeClass('loading');
+                showOnUI('SYS', 'WARN', `EC sensor read timed out (${countNum}x)`);
+            }, timeoutMs);
+        } else {
+            if (rtdTimeout) clearTimeout(rtdTimeout);
+            rtdTimeout = setTimeout(() => {
+                $(`#sensor-card-rtd`).removeClass('loading');
+                showOnUI('SYS', 'WARN', `RTD sensor read timed out (${countNum}x)`);
+            }, timeoutMs);
         }
     });
 }
@@ -761,6 +921,62 @@ function handlePacket(buf) {
         setConsoleLockState(true, false);
     }
 
+    // Intercept sensor reading packets (CMD, MSG, or LOG)
+    if (type === 0x01 || type === 0x02 || type === 0x06) {
+        let parsedVal = null;
+        let detectedSensor = null;
+        const payloadStr = payload.toString().trim();
+
+        // 1. Regex search for patterns like "ec: 1413" or "rtd: 24.5"
+        const ecMatch = payloadStr.match(/ec:\s*([0-9.-]+)/i);
+        const rtdMatch = payloadStr.match(/rtd:\s*([0-9.-]+)/i);
+
+        if (ecMatch) {
+            parsedVal = parseFloat(ecMatch[1]);
+            detectedSensor = 'ec';
+        } else if (rtdMatch) {
+            parsedVal = parseFloat(rtdMatch[1]);
+            detectedSensor = 'rtd';
+        } else if (!isNaN(parseFloat(payloadStr)) && isFinite(payloadStr)) {
+            // 2. If it's a raw number, use matching command name or pendingSensor context
+            parsedVal = parseFloat(payloadStr);
+            const cmdLower = cmd.toLowerCase();
+            if (cmdLower.includes('ec')) {
+                detectedSensor = 'ec';
+            } else if (cmdLower.includes('rtd')) {
+                detectedSensor = 'rtd';
+            } else if (pendingSensor) {
+                detectedSensor = pendingSensor;
+            }
+        }
+
+        if (detectedSensor && !isNaN(parsedVal)) {
+            // Update Card value text
+            $(`#sensor-val-${detectedSensor}`).text(parsedVal);
+            $(`#sensor-card-${detectedSensor}`).removeClass('loading');
+
+            // Clear timeouts
+            if (detectedSensor === 'ec' && ecTimeout) {
+                clearTimeout(ecTimeout);
+                ecTimeout = null;
+            } else if (detectedSensor === 'rtd' && rtdTimeout) {
+                clearTimeout(rtdTimeout);
+                rtdTimeout = null;
+            }
+
+            // Update history list
+            const history = detectedSensor === 'ec' ? ecHistory : rtdHistory;
+            history.push(parsedVal);
+            if (history.length > 5) history.shift();
+            updateHistoryUI(detectedSensor, history);
+
+            // Reset pendingSensor if matched
+            if (pendingSensor === detectedSensor) {
+                pendingSensor = null;
+            }
+        }
+    }
+
     // console.log("Received: " + type + ", " + pType + ", " + cmdLen + ", " + pLen + ", " + cmd + ", " + payload);
 
     switch (type) {
@@ -799,10 +1015,28 @@ function handlePacket(buf) {
 
         case 0x04: // GDC_TYPE_ACK
             showOnUI('RX', 'ACK', '');
+            if (currentWizardStep === 3 && _lastSentType === 0x01) {
+                if (wizardTimeout) {
+                    clearTimeout(wizardTimeout);
+                    wizardTimeout = null;
+                }
+                $('#cal-result-icon').html('<i class="fas fa-circle-check"></i>').removeClass('error').addClass('success');
+                $('#cal-result-text').text('Calibration Completed Successfully!');
+                showWizardStep(4);
+            }
             break;
 
         case 0x05: // GDC_TYPE_NACK
             showOnUI('RX', 'NACK', '');
+            if (currentWizardStep === 3 && _lastSentType === 0x01) {
+                if (wizardTimeout) {
+                    clearTimeout(wizardTimeout);
+                    wizardTimeout = null;
+                }
+                $('#cal-result-icon').html('<i class="fas fa-circle-xmark"></i>').removeClass('success').addClass('error');
+                $('#cal-result-text').text('Calibration Failed (Device rejected the value)');
+                showWizardStep(4);
+            }
             break;
 
         case 0x06: // GDC_TYPE_LOG
