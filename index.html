@@ -1283,7 +1283,6 @@
             overflow: hidden;
         }
         .sensor-card:hover {
-            border-color: var(--text-muted);
             background: var(--bg-log-line-hover);
         }
         .sensor-card-top {
@@ -1381,10 +1380,10 @@
         .sensor-read-btn {
             height: 26px !important;
             padding: 0 12px !important;
-            border-radius: 4px !important;
+            border-radius: 8px !important;
             font-size: 11px !important;
             font-weight: 600 !important;
-            background: var(--bg-input) !important;
+            background: var(--bg-tag) !important;
             border: 1px solid var(--border-color) !important;
             color: var(--text-main) !important;
             cursor: pointer;
@@ -1393,21 +1392,35 @@
             justify-content: center;
             gap: 4px;
             width: auto !important;
+            transition: all 0.2s ease !important;
         }
         .sensor-read-btn:hover {
-            background: var(--bg-btn-hover) !important;
+            background: var(--bg-log-line-hover) !important;
             color: var(--text-title) !important;
             border-color: var(--text-muted) !important;
+            transform: translateY(-1px) !important;
         }
         .read-count-container {
             display: flex;
             align-items: center;
             background: var(--bg-input);
             border: 1px solid var(--border-color);
-            border-radius: 4px;
+            border-radius: 8px;
             padding: 0 6px;
             height: 26px;
             box-sizing: border-box;
+        }
+        #sensor-card-ec .sensor-read-btn i {
+            color: #3b82f6;
+        }
+        #sensor-card-rtd .sensor-read-btn i {
+            color: #10b981;
+        }
+        #sensor-card-ec .sensor-read-btn:hover {
+            border-color: rgba(59, 130, 246, 0.45) !important;
+        }
+        #sensor-card-rtd .sensor-read-btn:hover {
+            border-color: rgba(16, 185, 129, 0.45) !important;
         }
         .read-count-input {
             width: 22px;
@@ -1451,6 +1464,12 @@
             font-size: 11px;
             font-weight: 600;
             z-index: 5;
+        }
+        .menu-action-btn.calibration-trigger-btn {
+            width: fit-content !important;
+        }
+        #tab-calibration .sensor-card:last-child .menu-action-btn i {
+            color: #10b981 !important;
         }
     </style>
 
@@ -1670,19 +1689,45 @@
             </div>
 
             <div id="tab-calibration" class="tab-panel">
-                <div class="menu-grid">
-                    <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="ec:calibrate" data-prefix="dry" data-default="0" data-unit="" data-title="EC Dry Calibration" data-desc="Ensure sensor is clean and dry. Value is usually 0.">
-                        <i class="fas fa-wind"></i> Calibrate EC Dry
-                    </button>
-                    <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="ec:calibrate" data-prefix="low" data-default="1413" data-unit="µS/cm" data-title="EC Low Calibration" data-desc="Submerge sensor in low calibration solution (e.g. 1413 µS/cm).">
-                        <i class="fas fa-water"></i> Calibrate EC Low
-                    </button>
-                    <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="ec:calibrate" data-prefix="high" data-default="12880" data-unit="µS/cm" data-title="High EC Calibration" data-desc="Submerge sensor in high calibration solution (e.g. 12880 µS/cm).">
-                        <i class="fas fa-fill-drip"></i> Calibrate EC High
-                    </button>
-                    <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="rtd:calibrate" data-prefix="custom" data-default="25.0" data-unit="°C" data-title="RTD Temp Calibration" data-desc="Enter the reference temperature of the solution in °C.">
-                        <i class="fas fa-gear"></i> Calibrate RTD Custom
-                    </button>
+                <div class="readings-cards-grid">
+                    <!-- EC Calibration Card -->
+                    <div class="sensor-card">
+                        <div class="sensor-card-top">
+                            <span class="sensor-icon" style="color: #3b82f6;"><i class="fas fa-flask"></i></span>
+                            <div class="sensor-info">
+                                <span class="sensor-name">EC Calibration</span>
+                            </div>
+                        </div>
+                        <div class="sensor-card-bottom" style="border-top: none; padding-top: 0; margin-top: 0; display: flex; gap: 10px; flex-wrap: wrap; width: 100%; justify-content: flex-start !important;">
+                            <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="ec:calibrate" data-prefix="single" data-default="1413" data-unit="µS/cm" data-title="EC Single Point Calibration" data-desc="Submerge sensor in reference calibration solution (e.g. 1413 µS/cm)." style="padding: 6px 14px; font-size: 11px; justify-content: center; border-radius: 8px; font-weight: 600; width: fit-content;">
+                                <i class="fas fa-crosshairs" style="color: #3b82f6;"></i> Single Point
+                            </button>
+                            <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="ec:calibrate" data-prefix="dry" data-default="0" data-unit="" data-title="EC Dry Calibration" data-desc="Ensure sensor is clean and dry. Value is usually 0." style="padding: 6px 14px; font-size: 11px; justify-content: center; border-radius: 8px; font-weight: 600; width: fit-content;">
+                                <i class="fas fa-wind" style="color: #3b82f6;"></i> Dry
+                            </button>
+                            <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="ec:calibrate" data-prefix="low" data-default="1413" data-unit="µS/cm" data-title="EC Low Calibration" data-desc="Submerge sensor in low calibration solution (e.g. 1413 µS/cm)." style="padding: 6px 14px; font-size: 11px; justify-content: center; border-radius: 8px; font-weight: 600; width: fit-content;">
+                                <i class="fas fa-water" style="color: #3b82f6;"></i> Low
+                            </button>
+                            <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="ec:calibrate" data-prefix="high" data-default="12880" data-unit="µS/cm" data-title="High EC Calibration" data-desc="Submerge sensor in high calibration solution (e.g. 12880 µS/cm)." style="padding: 6px 14px; font-size: 11px; justify-content: center; border-radius: 8px; font-weight: 600; width: fit-content;">
+                                <i class="fas fa-fill-drip" style="color: #3b82f6;"></i> High
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- RTD Calibration Card -->
+                    <div class="sensor-card">
+                        <div class="sensor-card-top">
+                            <span class="sensor-icon" style="color: #10b981;"><i class="fas fa-temperature-half"></i></span>
+                            <div class="sensor-info">
+                                <span class="sensor-name">RTD Calibration</span>
+                            </div>
+                        </div>
+                        <div class="sensor-card-bottom" style="border-top: none; padding-top: 0; margin-top: 0; display: flex; gap: 10px; width: 100%; justify-content: flex-start !important;">
+                            <button type="button" class="menu-action-btn calibration-trigger-btn" data-cmd="rtd:calibrate" data-prefix="custom" data-default="25.0" data-unit="°C" data-title="RTD Temp Calibration" data-desc="Enter the reference temperature of the solution in °C." style="padding: 6px 14px; font-size: 11px; justify-content: center; border-radius: 8px; font-weight: 600; width: fit-content;">
+                                <i class="fas fa-gear" style="color: #10b981;"></i> Custom Temp
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1764,6 +1809,25 @@
                 <div class="wizard-step-panel active" data-step="1">
                     <div class="wizard-instruction-icon"><i class="fas fa-screwdriver-wrench"></i></div>
                     <p class="wizard-instruction-text" id="cal-modal-desc">Ensure the sensor is clean and properly prepared before continuing.</p>
+                    
+                    <!-- Stability check preview in wizard -->
+                    <div class="stability-check-container" style="margin-top: 15px; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">STABILITY CHECK</span>
+                            <div style="display: flex; align-items: baseline; gap: 4px;">
+                                <span id="wizard-live-value" style="font-size: 16px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text-title);">--</span>
+                                <span id="wizard-live-unit" style="font-size: 10px; color: var(--text-muted); font-weight: 500;">µS/cm</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" id="wizard-read-btn" class="sensor-read-btn" style="height: 26px !important; padding: 0 10px !important; border-radius: 6px !important; font-size: 11px !important;">
+                                <i class="fas fa-play"></i> Read Once
+                            </button>
+                            <button type="button" id="wizard-live-toggle" class="sensor-read-btn" style="height: 26px !important; padding: 0 10px !important; border-radius: 6px !important; font-size: 11px !important; background: transparent !important; border-color: var(--border-color) !important;">
+                                <i class="fas fa-sync"></i> Live Stream
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Step 2: Reference Value Selection -->
@@ -1791,6 +1855,22 @@
                     <div class="wizard-result-container">
                         <div class="wizard-result-icon" id="cal-result-icon"><i class="fas fa-circle-check"></i></div>
                         <p class="wizard-result-text" id="cal-result-text">Calibration Completed Successfully</p>
+                    </div>
+
+                    <!-- Verification preview in wizard -->
+                    <div class="calibration-verification-container" id="wizard-verify-container" style="margin-top: 15px; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">VERIFY CALIBRATION</span>
+                            <div style="display: flex; align-items: baseline; gap: 4px;">
+                                <span id="wizard-verify-value" style="font-size: 16px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text-title);">--</span>
+                                <span id="wizard-verify-unit" style="font-size: 10px; color: var(--text-muted); font-weight: 500;">µS/cm</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" id="wizard-verify-btn" class="sensor-read-btn" style="height: 26px !important; padding: 0 10px !important; border-radius: 6px !important; font-size: 11px !important;">
+                                <i class="fas fa-play"></i> Read Sensor
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

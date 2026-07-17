@@ -342,9 +342,29 @@ function setupLogger() {
     let pendingCalCmd = null;
     let pendingCalPrefix = null;
 
+    let wizardLiveStreamingInterval = null;
+    let isWizardLiveStreaming = false;
+
+    function stopWizardLiveStream() {
+        if (wizardLiveStreamingInterval) {
+            clearInterval(wizardLiveStreamingInterval);
+            wizardLiveStreamingInterval = null;
+        }
+        isWizardLiveStreaming = false;
+        $('#wizard-live-toggle').removeClass('active').css({
+            'background': 'transparent',
+            'border-color': 'var(--border-color)',
+            'color': 'var(--text-main)'
+        }).html('<i class="fas fa-sync"></i> Live Stream');
+        $('#wizard-read-btn').prop('disabled', false).css('opacity', '1');
+    }
+
     // Helper to transition steps in the wizard
     function showWizardStep(step) {
         currentWizardStep = step;
+        if (step !== 1) {
+            stopWizardLiveStream();
+        }
         
         // Hide all step panels, show active
         $('.wizard-step-panel').removeClass('active');
@@ -388,11 +408,27 @@ function setupLogger() {
             $('#cal-modal-next').show().text('Finish').removeClass('danger').addClass('primary');
             $('#cal-modal-cancel').hide();
             $('#cal-modal-prev').hide();
+
+            // Handle verification UI
+            if ($('#cal-result-icon').hasClass('success')) {
+                const sensor = pendingCalCmd && pendingCalCmd.startsWith('ec') ? 'ec' : 'rtd';
+                $('#wizard-verify-container').show();
+                $('#wizard-verify-value').text('--');
+                $('#wizard-verify-unit').text(pendingCalUnit || "");
+                if (sensor === 'ec') {
+                    $('#wizard-verify-value').css('color', '#3b82f6');
+                } else {
+                    $('#wizard-verify-value').css('color', '#10b981');
+                }
+            } else {
+                $('#wizard-verify-container').hide();
+            }
         }
     }
 
     // Close/Cancel Calibration Wizard
     function closeCalibrationWizard() {
+        stopWizardLiveStream();
         $('#calibration-modal').removeClass('open');
         if (wizardTimeout) {
             clearTimeout(wizardTimeout);
@@ -420,6 +456,15 @@ function setupLogger() {
         pendingCalDesc = desc;
         pendingCalDefault = defaultValue;
 
+        const sensor = cmd.startsWith('ec') ? 'ec' : 'rtd';
+        $('#wizard-live-value').text('--');
+        $('#wizard-live-unit').text(unit || "");
+        if (sensor === 'ec') {
+            $('#wizard-live-value').css('color', '#3b82f6');
+        } else {
+            $('#wizard-live-value').css('color', '#10b981');
+        }
+
         $('#cal-modal-title').text(title);
         $('#cal-modal-desc').text(desc);
         $('#cal-modal-input').val(defaultValue);
@@ -441,6 +486,7 @@ function setupLogger() {
             if (prefix === 'low') presets = [84, 1413, 12880];
             else if (prefix === 'high') presets = [12880, 50000];
             else if (prefix === 'dry') presets = [0];
+            else if (prefix === 'single') presets = [1413, 12880];
         } else if (cmd === 'rtd:calibrate') {
             presets = [0.0, 25.0, 100.0];
         }
@@ -479,6 +525,47 @@ function setupLogger() {
         if (currentWizardStep !== 3 && (e.target === this || $(e.target).closest('.modal-card').length === 0)) {
             closeCalibrationWizard();
         }
+    });
+
+    // Wizard Read Once
+    $('#wizard-read-btn').on('click', () => {
+        if (!pendingCalCmd) return;
+        const sensor = pendingCalCmd.startsWith('ec') ? 'ec' : 'rtd';
+        $('#wizard-live-value').text('Reading...');
+        sendAtomicPacket(0x01, `${sensor}:read`, TYPES.PAYLOAD_STRING, "1");
+    });
+
+    // Wizard Live Stream Toggle
+    $('#wizard-live-toggle').on('click', () => {
+        if (!pendingCalCmd) return;
+        const sensor = pendingCalCmd.startsWith('ec') ? 'ec' : 'rtd';
+
+        if (isWizardLiveStreaming) {
+            stopWizardLiveStream();
+        } else {
+            isWizardLiveStreaming = true;
+            $('#wizard-live-toggle').addClass('active').css({
+                'background': 'rgba(59, 130, 246, 0.15)',
+                'border-color': '#3b82f6',
+                'color': '#3b82f6'
+            }).html('<i class="fas fa-spinner fa-spin"></i> Streaming');
+            
+            $('#wizard-read-btn').prop('disabled', true).css('opacity', '0.5');
+            $('#wizard-live-value').text('Reading...');
+            sendAtomicPacket(0x01, `${sensor}:read`, TYPES.PAYLOAD_STRING, "1");
+
+            wizardLiveStreamingInterval = setInterval(() => {
+                sendAtomicPacket(0x01, `${sensor}:read`, TYPES.PAYLOAD_STRING, "1");
+            }, 2000);
+        }
+    });
+
+    // Wizard Verify Reading Once
+    $('#wizard-verify-btn').on('click', () => {
+        if (!pendingCalCmd) return;
+        const sensor = pendingCalCmd.startsWith('ec') ? 'ec' : 'rtd';
+        $('#wizard-verify-value').text('Reading...');
+        sendAtomicPacket(0x01, `${sensor}:read`, TYPES.PAYLOAD_STRING, "1");
     });
 
     // Wizard Next / Execute action
@@ -954,6 +1041,12 @@ function handlePacket(buf) {
             // Update Card value text
             $(`#sensor-val-${detectedSensor}`).text(parsedVal);
             $(`#sensor-card-${detectedSensor}`).removeClass('loading');
+
+            // Update Wizard Live Reading preview if open
+            if ($('#calibration-modal').hasClass('open') && pendingCalCmd && pendingCalCmd.startsWith(detectedSensor)) {
+                $('#wizard-live-value').text(parsedVal);
+                $('#wizard-verify-value').text(parsedVal);
+            }
 
             // Clear timeouts
             if (detectedSensor === 'ec' && ecTimeout) {
